@@ -163,44 +163,52 @@ def generate_posts(target_date):
 
 АУДИТОРИЯ: женщины 50-70 лет, Россия. Любят уют, кухню, ностальгию, пересылают открытки подругам.
 
-СТИЛЬ:
+СТИЛЬ (для постов 2, 3, 4):
 — Как сообщение от тёплой подруги, НЕ статья
 — Короткие абзацы (2-3 предложения), между ними ПУСТАЯ СТРОКА
-— Эмодзи-маркеры: 🌅 💚 📖 🍲 🌙 ✅
+— Эмодзи-маркеры: 💚 📖 🍲 ✅
 — Списки — каждый пункт с новой строки
-— 80-120 слов на пост. Кратко, душевно
+— 80-120 слов. Кратко, душевно
 — Тон: нежный, ободряющий, лёгкий юмор
 
-ПРИМЕР:
+ОТКРЫТКИ (посты 1 и 5) — ОСОБЫЙ ФОРМАТ:
+— Текст поста = ТОЛЬКО CTA + ссылка на канал (НЕ пиши пожелания в тексте!)
+— Вместо этого напиши НАДПИСЬ ДЛЯ ОТКРЫТКИ — короткое пожелание (2-4 строки), которое будет наложено на картинку
+— Промпт для картинки = красивый фон БЕЗ текста (цветы, рассвет, свечи, природа)
+
+ПРИМЕР поста-открытки:
 ---
-💚 Белизна тюлю — БЕЗ химии!
+📌 ПОСТ 1 — УТРЕННЯЯ ОТКРЫТКА
+Тема: Весеннее утро
+---
 
-Вам понадобится:
-— Тёплая вода (30-40°)
-— 5 ст. л. соли
-— 2 ст. л. соды
+Перешлите открытку тому, кого хотите обнять 💌
 
-✅ Замочите на 1-2 часа
-✅ Прополощите
-✅ Постирайте на деликатном режиме
+Ваш канал: [«Серебряный возраст ✨»](https://max.ru/id540697837513_biz)
 
-Поделитесь с подругой 💌
-
-Ваши полезные советы: [«Серебряный возраст ✨»](https://max.ru/id540697837513_biz)
+✉️ Надпись на открытке:
+Доброе утро, родные!
+Пусть этот день принесёт
+тепло и улыбки ☀️
 ---"""
 
     date_tag = target_date.strftime('%d%b').lower()
     link = "[«Серебряный возраст ✨»](https://max.ru/id540697837513_biz)"
-    user_prompt = f"""Сегодня {date_str}. Сгенерируй 5 постов (80-120 слов каждый):
+    user_prompt = f"""Сегодня {date_str}. Сгенерируй 5 постов:
 
-1. 🌅 УТРЕННЯЯ — доброе утро, дата, сезон. Праздник — поздравь.
-2. 💚 ЛАЙФХАК — один совет, шаги списком.
-3. 📖 НОСТАЛЬГИЯ — воспоминание из СССР (60-80-е), детали.
-4. 🍲 РЕЦЕПТ — ингредиенты списком + шаги.
-5. 🌙 ВЕЧЕРНЯЯ — спокойной ночи.
+Посты 2,3,4: текст 80-120 слов каждый.
+Посты 1,5 (ОТКРЫТКИ): текст = ТОЛЬКО призыв + ссылка. Пожелание — в «✉️ Надпись на открытке».
+
+Рубрики:
+1. 🌅 УТРЕННЯЯ ОТКРЫТКА — доброе утро, дата, сезон, праздник.
+2. 💚 ЛАЙФХАК — совет, шаги списком.
+3. 📖 НОСТАЛЬГИЯ — воспоминание из СССР, детали.
+4. 🍲 РЕЦЕПТ — ингредиенты + шаги.
+5. 🌙 ВЕЧЕРНЯЯ ОТКРЫТКА — спокойной ночи.
 {previous_block}
 ПРАВИЛА: пустые строки между абзацами, списки с новой строки.
-Конец поста: призыв переслать + подпись со ссылкой {link}
+Посты 2,3,4: конец = призыв переслать + подпись {link}
+Посты 1,5: конец = призыв переслать + подпись {link} (БЕЗ текста пожелания!)
 Ссылка ВШИТА в текст (markdown), НЕ отдельно!
 
 ФОРМАТ:
@@ -214,23 +222,24 @@ def generate_posts(target_date):
 Тема: [тема]
 ---
 
-[текст]
-
-[призыв]
+Перешлите открытку тому, кого хотите обнять 💌
 
 Ваш канал: {link}
+
+✉️ Надпись на открытке:
+[2-4 строки душевного пожелания с датой/сезоном/праздником]
 
 📸 Картинка: post1_morning_{date_tag}.png
 
 🖼 Промпт для генерации картинки:
-[20-30 слов, английский, пастельные тона]
+[красивый ФОН без текста: цветы, рассвет, природа, пастельные тона]
 
 ---
 📌 ПОСТ 2 — ЛАЙФХАК / ЗДОРОВЬЕ
 Тема: [тема]
 ---
 
-[текст]
+[текст 80-120 слов]
 
 [призыв]
 
@@ -246,7 +255,7 @@ def generate_posts(target_date):
 Тема: [тема]
 ---
 
-[текст]
+[текст 80-120 слов]
 
 [призыв]
 
@@ -262,7 +271,7 @@ def generate_posts(target_date):
 Тема: [тема]
 ---
 
-[текст]
+[текст 80-120 слов]
 
 [призыв]
 
@@ -278,16 +287,17 @@ def generate_posts(target_date):
 Тема: [тема]
 ---
 
-[текст]
-
-[призыв]
+Перешлите открытку подруге — пусть и у неё вечер будет тёплым 💌
 
 Ваш уютный вечер: {link} 🌙
+
+✉️ Надпись на открытке:
+[2-4 строки вечернего пожелания, тёплые слова на ночь]
 
 📸 Картинка: post5_evening_{date_tag}.png
 
 🖼 Промпт для генерации картинки:
-[промпт]
+[красивый ФОН без текста: свечи, вечер, уютная комната, мягкий свет]
 
 ===================================================
 КОНЕЦ КОНТЕНТА НА {date_str.upper()}
@@ -405,6 +415,97 @@ def generate_image(prompt_text, filename):
         return None
 
 
+def overlay_text_on_image(filepath, text):
+    """Накладывает текст пожелания на картинку-открытку."""
+    try:
+        from PIL import Image, ImageDraw, ImageFont, ImageFilter
+
+        # Открываем изображение (может быть JPEG несмотря на расширение .png)
+        img = Image.open(filepath)
+        img = img.convert("RGBA")
+        w, h = img.size
+
+        # Полупрозрачный слой для подложки текста
+        overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+        draw = ImageDraw.Draw(overlay)
+
+        # Шрифт (Georgia Bold — есть кириллица)
+        font_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fonts")
+        font_path = os.path.join(font_dir, "GeorgiaBold.ttf")
+        if not os.path.exists(font_path):
+            # Fallback: системный шрифт macOS
+            for fp in ["/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+                        "/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"]:
+                if os.path.exists(fp):
+                    font_path = fp
+                    break
+            else:
+                font_path = None
+
+        # Подбираем размер шрифта
+        font_size = int(h * 0.065)
+        if font_path:
+            font = ImageFont.truetype(font_path, font_size)
+        else:
+            font = ImageFont.load_default()
+
+        # Убираем эмодзи (шрифт их не поддерживает) и разбиваем на строки
+        import unicodedata
+        clean_text = "".join(
+            c for c in text
+            if unicodedata.category(c) not in ("So", "Sk", "Cn")
+            or c in ("«", "»", "—", "–", "…", "✨")
+        )
+        # Убираем символы-вариаторы и ZWJ
+        clean_text = re.sub(r'[\ufe0f\ufe0e\u200d\u200b]', '', clean_text)
+        lines = [line.strip() for line in clean_text.split("\n") if line.strip()]
+
+        # Считаем размер текстового блока
+        line_spacing = int(font_size * 0.4)
+        total_height = len(lines) * font_size + (len(lines) - 1) * line_spacing
+        max_line_width = 0
+        line_bboxes = []
+        for line in lines:
+            bbox = draw.textbbox((0, 0), line, font=font)
+            lw = bbox[2] - bbox[0]
+            line_bboxes.append(lw)
+            max_line_width = max(max_line_width, lw)
+
+        # Позиция: по центру, слегка ниже середины
+        pad_x, pad_y = 40, 25
+        block_x = (w - max_line_width) // 2
+        block_y = (h - total_height) // 2 + int(h * 0.05)
+
+        # Полупрозрачная подложка
+        draw.rounded_rectangle(
+            [block_x - pad_x, block_y - pad_y,
+             block_x + max_line_width + pad_x, block_y + total_height + pad_y],
+            radius=20,
+            fill=(255, 255, 255, 160),
+        )
+
+        # Рисуем текст
+        y = block_y
+        for i, line in enumerate(lines):
+            lw = line_bboxes[i]
+            x = (w - lw) // 2  # центрируем каждую строку
+            # Тень
+            draw.text((x + 2, y + 2), line, font=font, fill=(80, 60, 40, 120))
+            # Основной текст
+            draw.text((x, y), line, font=font, fill=(60, 30, 10, 255))
+            y += font_size + line_spacing
+
+        # Объединяем
+        result = Image.alpha_composite(img, overlay).convert("RGB")
+        result.save(filepath, "JPEG", quality=95)
+        log.info(f"Надпись наложена на {os.path.basename(filepath)}")
+        return filepath
+
+    except Exception as e:
+        log.error(f"Ошибка наложения текста: {e}")
+        return filepath
+
+
 # ── 3. Парсинг постов ────────────────────────────────────
 
 def parse_posts(content):
@@ -430,10 +531,21 @@ def parse_posts(content):
         img_match = re.search(r'Картинка:\s*(\S+\.png)', block)
         img_filename = img_match.group(1) if img_match else f"post{post_num}.png"
 
-        # Текст поста (от "---\n\n" до "📸 Картинка:")
-        text_match = re.search(r'---\s*\n\n(.*?)(?:\n\n📸\s*Картинка:|\n📸\s*Картинка:)', block, re.DOTALL)
-        if not text_match:
-            text_match = re.search(r'---\s*\n(.*?)(?:\n📸)', block, re.DOTALL)
+        # Надпись на открытке (для постов 1 и 5)
+        card_text = ""
+        card_match = re.search(r'✉️\s*Надпись на открытке:\s*\n(.*?)(?:\n\n📸|\n📸)', block, re.DOTALL)
+        if card_match:
+            card_text = card_match.group(1).strip()
+
+        # Текст поста (от "---\n\n" до "✉️ Надпись" или "📸 Картинка:")
+        if card_text:
+            # Открытка: текст до надписи
+            text_match = re.search(r'---\s*\n\n(.*?)(?:\n\n✉️|\n✉️)', block, re.DOTALL)
+        else:
+            # Обычный пост: текст до картинки
+            text_match = re.search(r'---\s*\n\n(.*?)(?:\n\n📸\s*Картинка:|\n📸\s*Картинка:)', block, re.DOTALL)
+            if not text_match:
+                text_match = re.search(r'---\s*\n(.*?)(?:\n📸)', block, re.DOTALL)
         post_text = text_match.group(1).strip() if text_match else ""
 
         posts.append({
@@ -443,6 +555,7 @@ def parse_posts(content):
             "img_prompt": img_prompt,
             "img_filename": img_filename,
             "img_path": None,
+            "card_text": card_text,  # надпись для наложения на открытку
         })
 
     return posts
@@ -597,6 +710,9 @@ def task_generate(target_date=None):
             if post["img_prompt"]:
                 filepath = generate_image(post["img_prompt"], post["img_filename"])
                 post["img_path"] = filepath
+                # Для открыток (посты 1 и 5) — накладываем надпись
+                if filepath and post.get("card_text"):
+                    overlay_text_on_image(filepath, post["card_text"])
                 if i < len(posts) - 1:
                     time.sleep(1)
 

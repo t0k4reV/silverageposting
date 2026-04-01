@@ -5,6 +5,9 @@ data/
 *.jpeg
 posts.txt
 
+# Keep fonts
+!fonts/
+
 # Python
 __pycache__/
 *.pyc
