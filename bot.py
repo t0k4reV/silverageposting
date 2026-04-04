@@ -61,6 +61,9 @@ WAVESPEED_API_KEY = os.environ.get("WAVESPEED_API_KEY", "")
 WAVESPEED_MODEL = os.environ.get("WAVESPEED_MODEL", "wavespeed-ai/flux-schnell")
 WAVESPEED_API_BASE = "https://api.wavespeed.ai/api/v3"
 
+# Pexels — бесплатные фото для открыток
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY", "")
+
 TZ_NAME = os.environ.get("TZ", "Europe/Moscow")
 
 # Время постинга (MSK по умолчанию)
@@ -131,15 +134,21 @@ def save_history(history):
 
 def get_previous_topics():
     history = load_history()
-    # Последние 30 тем (больше — превышает лимит токенов Groq)
-    return "\n".join(history.get("topics", [])[-30:])
+    # Последние 15 тем, только ключевые слова (экономим токены)
+    topics = history.get("topics", [])[-15:]
+    return ", ".join(topics)
 
 
 def add_topics_to_history(topics_list):
     history = load_history()
-    history["topics"].extend(topics_list)
-    # Храним максимум 200 тем
-    history["topics"] = history["topics"][-200:]
+    # Сохраняем только короткие ключевые слова (первые 5 слов темы)
+    short = []
+    for t in topics_list:
+        words = t.split()[:5]
+        short.append(" ".join(words))
+    history["topics"].extend(short)
+    # Храним максимум 100 тем
+    history["topics"] = history["topics"][-100:]
     save_history(history)
 
 
@@ -152,12 +161,7 @@ def generate_posts(target_date):
 
     previous_block = ""
     if previous_topics:
-        previous_block = f"""
-
-⛔ ЗАПРЕЩЁННЫЕ ТЕМЫ (уже были, НЕ повторяй!):
-{previous_topics}
-Придумай СОВЕРШЕННО ДРУГИЕ темы!
-"""
+        previous_block = f"\nНЕ повторяй темы: {previous_topics}\n"
 
     system_prompt = """Ты — копирайтер канала «Серебряный возраст ✨» в MAX.
 
@@ -231,8 +235,8 @@ def generate_posts(target_date):
 
 📸 Картинка: post1_morning_{date_tag}.png
 
-🖼 Промпт для генерации картинки:
-[красивый ФОН без текста: цветы, рассвет, природа, пастельные тона]
+🔍 Поиск фото (2-3 слова, англ.):
+[например: spring flowers morning, sunrise garden, blooming sakura]
 
 ---
 📌 ПОСТ 2 — ЛАЙФХАК / ЗДОРОВЬЕ
@@ -296,8 +300,8 @@ def generate_posts(target_date):
 
 📸 Картинка: post5_evening_{date_tag}.png
 
-🖼 Промпт для генерации картинки:
-[красивый ФОН без текста: свечи, вечер, уютная комната, мягкий свет]
+🔍 Поиск фото (2-3 слова, англ.):
+[например: cozy evening candle, warm tea night, peaceful bedroom]
 
 ===================================================
 КОНЕЦ КОНТЕНТА НА {date_str.upper()}
@@ -330,7 +334,56 @@ def save_posts_to_file(content):
     log.info(f"Контент сохранён в {POSTS_FILE}")
 
 
-# ── 2. Генерация картинок (WaveSpeed AI) ─────────────────
+# ── 2. Картинки ──────────────────────────────────────────
+
+def fetch_pexels_photo(query, filename):
+    """Скачивает фото с Pexels по запросу. Бесплатно, 200 req/month."""
+    filepath = os.path.join(IMAGES_DIR, filename)
+    log.info(f"Ищу фото на Pexels: '{query}' → {filename}")
+
+    if not PEXELS_API_KEY:
+        log.warning("PEXELS_API_KEY не задан, пропускаю Pexels")
+        return None
+
+    try:
+        resp = requests.get(
+            "https://api.pexels.com/v1/search",
+            headers={"Authorization": PEXELS_API_KEY},
+            params={
+                "query": query,
+                "per_page": 15,
+                "orientation": "landscape",
+                "size": "medium",
+            },
+            timeout=15,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        photos = data.get("photos", [])
+        if not photos:
+            log.warning(f"Pexels: нет результатов по запросу '{query}'")
+            return None
+
+        # Берём случайное фото из топ-15
+        import random
+        photo = random.choice(photos)
+        img_url = photo["src"]["large"]  # 940px wide
+
+        img_resp = requests.get(img_url, timeout=30)
+        img_resp.raise_for_status()
+
+        with open(filepath, "wb") as f:
+            f.write(img_resp.content)
+
+        size_kb = os.path.getsize(filepath) // 1024
+        photographer = photo.get("photographer", "?")
+        log.info(f"Фото скачано: {filename} ({size_kb} KB, by {photographer})")
+        return filepath
+
+    except Exception as e:
+        log.error(f"Pexels ошибка: {str(e)[:150]}")
+        return None
+
 
 def generate_image(prompt_text, filename):
     """Генерирует картинку через WaveSpeed AI (FLUX Schnell)."""
@@ -521,11 +574,17 @@ def parse_posts(content):
         topic_match = re.search(r'Тема:\s*(.+)', block)
         topic = topic_match.group(1).strip() if topic_match else f"Пост {post_num}"
 
-        # Промпт для картинки
+        # Промпт для картинки (AI-генерация)
         prompt_match = re.search(r'Промпт для (?:генерации картинки|generating picture):\s*\n(.+?)(?:\n\n|\n---)', block, re.DOTALL)
         if not prompt_match:
             prompt_match = re.search(r'Промпт для (?:генерации картинки|generating picture):\s*\n(.+)', block)
         img_prompt = prompt_match.group(1).strip() if prompt_match else ""
+
+        # Поисковый запрос для фото (Pexels — для открыток)
+        search_match = re.search(r'🔍\s*Поиск фото[^:]*:\s*\n(.+?)(?:\n\n|\n---)', block, re.DOTALL)
+        if not search_match:
+            search_match = re.search(r'🔍\s*Поиск фото[^:]*:\s*\n(.+)', block)
+        photo_query = search_match.group(1).strip() if search_match else ""
 
         # Имя файла картинки
         img_match = re.search(r'Картинка:\s*(\S+\.png)', block)
@@ -555,7 +614,8 @@ def parse_posts(content):
             "img_prompt": img_prompt,
             "img_filename": img_filename,
             "img_path": None,
-            "card_text": card_text,  # надпись для наложения на открытку
+            "card_text": card_text,
+            "photo_query": photo_query,  # поиск фото для открыток
         })
 
     return posts
@@ -705,16 +765,29 @@ def task_generate(target_date=None):
         add_topics_to_history(topics)
 
         # 4. Генерация картинок
-        log.info(f"Генерация картинок через WaveSpeed AI...")
+        log.info("Генерация картинок...")
         for i, post in enumerate(posts):
-            if post["img_prompt"]:
+            filepath = None
+
+            if post.get("photo_query"):
+                # Открытка — берём фото с Pexels
+                filepath = fetch_pexels_photo(post["photo_query"], post["img_filename"])
+                if not filepath and post["img_prompt"]:
+                    # Fallback на WaveSpeed если Pexels не сработал
+                    log.info("Pexels не сработал, генерирую через WaveSpeed...")
+                    filepath = generate_image(post["img_prompt"], post["img_filename"])
+            elif post["img_prompt"]:
+                # Обычный пост — генерация через WaveSpeed
                 filepath = generate_image(post["img_prompt"], post["img_filename"])
-                post["img_path"] = filepath
-                # Для открыток (посты 1 и 5) — накладываем надпись
-                if filepath and post.get("card_text"):
-                    overlay_text_on_image(filepath, post["card_text"])
-                if i < len(posts) - 1:
-                    time.sleep(1)
+
+            post["img_path"] = filepath
+
+            # Для открыток — накладываем надпись
+            if filepath and post.get("card_text"):
+                overlay_text_on_image(filepath, post["card_text"])
+
+            if i < len(posts) - 1:
+                time.sleep(1)
 
         # 5. Сохраняем в память
         today_posts[date_key] = posts
