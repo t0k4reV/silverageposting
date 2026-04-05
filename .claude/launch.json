@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Bot Scheduler (daemon)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["bot.py"]
+    },
+    {
+      "name": "Generate & Publish Now",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["bot.py", "--now"]
+    },
+    {
+      "name": "Generate Only (no publish)",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["bot.py", "--generate-only"]
+    }
+  ]
+}

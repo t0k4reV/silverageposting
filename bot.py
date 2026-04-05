@@ -142,6 +142,46 @@ def add_topics_to_history(channel_id, topics_list):
     save_history(channel_id, history)
 
 
+# ── Новости из Google News RSS ───────────────────────────
+
+GOOGLE_NEWS_RSS = (
+    "https://news.google.com/rss/search?"
+    "q=%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%BE%D0%B1%D0%B8%D0%BB%D0%B8+%D0%BD%D0%BE%D0%B2%D0%BE%D1%81%D1%82%D0%B8"
+    "&hl=ru&gl=RU&ceid=RU:ru"
+)
+
+
+def fetch_auto_news(max_items=10):
+    """Получает свежие автоновости из Google News RSS."""
+    import xml.etree.ElementTree as ET
+    try:
+        resp = requests.get(GOOGLE_NEWS_RSS, timeout=10,
+                            headers={"User-Agent": "Mozilla/5.0"})
+        resp.raise_for_status()
+        root = ET.fromstring(resp.content)
+        headlines = []
+        for item in root.iter("item"):
+            title = item.findtext("title", "").strip()
+            # Убираем источник после " - "
+            if " - " in title:
+                title = title.rsplit(" - ", 1)[0].strip()
+            if title and 15 < len(title) < 200:
+                headlines.append(title)
+        # Убираем дубликаты
+        seen = set()
+        unique = []
+        for h in headlines:
+            short = h[:50].lower()
+            if short not in seen:
+                seen.add(short)
+                unique.append(h)
+        log.info(f"Google News: {len(unique)} автоновостей")
+        return unique[:max_items]
+    except Exception as e:
+        log.warning(f"Google News: {str(e)[:100]}")
+        return []
+
+
 # ── 1. Генерация текста ──────────────────────────────────
 
 def generate_posts(target_date, channel_id):
@@ -156,10 +196,19 @@ def generate_posts(target_date, channel_id):
     link = channel["link"]
     channel_name = channel["name"]
 
+    # Новости для автоканала
+    news_block = ""
+    if channel.get("use_news"):
+        news = fetch_auto_news(8)
+        if news:
+            news_block = "\nСвежие новости (используй как вдохновение):\n" + "\n".join(f"- {n}" for n in news) + "\n"
+            log.info(f"[{channel_name}] Загружено {len(news)} новостей")
+
     user_prompt = channel["user_prompt_template"].format(
         date_str=date_str,
         date_tag=date_tag,
         previous_block=previous_block,
+        news_block=news_block,
         link=link,
         channel_name=channel_name,
         date_str_upper=date_str.upper(),
